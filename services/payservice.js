@@ -1,4 +1,4 @@
-var {cardpaymessage, alipaymessage, idealpaymessage} = require('../models/paymessage');
+var {cardpaymessage, googlepaymessage, idealpaymessage} = require('../models/paymessage');
 const axios = require('axios');
 
 const payrequest = async(req,res) =>{
@@ -13,10 +13,11 @@ const payrequest = async(req,res) =>{
         payData.source.cvv = req.body.cardCVV;
         payData.source.expiry_month = req.body.cardExpDt.substring(0,1) == '0'? req.body.cardExpDt.substring(1,2):req.body.cardExpDt.substring(0,2);
         payData.source.expiry_year = req.body.cardExpDt.length == 5? '20' + req.body.cardExpDt.substring(3,5): '20' + req.body.cardExpDt.substring(2,4);
-    }else if(payMethod == 'alipay'){
-        payData = alipaymessage;
+    }else if(payMethod == 'googlepay'){
+        payData = googlepaymessage;
     }else if(payMethod == 'ideal'){
         payData = idealpaymessage;
+        payData.source.description = 'ORD240522ABCD';
     }
     //Set currency and amount, here the amount is hard coded as per requirement 
     if(req.body.country == 'HK'){
@@ -43,18 +44,38 @@ const payrequest = async(req,res) =>{
     };
 
     //Call Checkout API
-    await axios.request(config)
-        .then((response) => {
-            console.log(JSON.stringify(response.data));
-            res.status(200).json({status:response.data.status, amount:response.data.amount,currency:response.data.currency});
-        })
-        .catch((error) => {
-            if(error.response){
-                console.log("Error! " + error.response.status);
-                console.log(JSON.stringify(error.response.data));
-                res.status(422).json(error.response.data);
-            }
-        });
+    if(payMethod == 'card'){
+        await axios.request(config)
+            .then((response) => {
+                console.log(JSON.stringify(response.data));
+                res.status(200).json({status:response.data.status, amount:response.data.amount,currency:response.data.currency});
+            })
+            .catch((error) => {
+                if(error.response){
+                    console.log("Error! " + error.response.status);
+                    console.log(JSON.stringify(error.response.data));
+                    res.status(422).json(error.response.data);
+                }
+            });
+    }else if(payMethod == 'ideal'){
+        await axios.request(config)
+            .then((response) => {
+                console.log(JSON.stringify(response.data));
+                //res.status(200).json({status:response.data.status, amount:response.data.amount,currency:response.data.currency});
+                res.redirect(response.data._links.redirect.href);
+            })
+            .catch((error) => {
+                if(error.response){
+                    console.log("Error! " + error.response.status);
+                    console.log(JSON.stringify(error.response.data));
+                    res.status(422).json(error.response.data);
+                }
+            });
+    }else if(payMethod == 'googlepay'){
+
+    }
 }
+
+
 
 module.exports = payrequest

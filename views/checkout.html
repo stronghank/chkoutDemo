@@ -28,7 +28,7 @@
       <div class="row">
         <div class="col-md-4 order-md-2 mb-4">
           <h4 class="d-flex justify-content-between align-items-center mb-3">
-            <span class="text-muted">Your cart</span>
+            <span class="text-muted">Your cart (ORD240522ABCD)</span>
             <span class="badge badge-secondary badge-pill">3</span>
           </h4>
           <ul class="list-group mb-3">
@@ -60,7 +60,7 @@
         <div class="col-md-8 order-md-1">    
           
           
-          <form class="needs-validation" name="paymentform"  id = "paymentform" action = "/checkout" method="POST" onsubmit="return validateForm()">
+          <form class="needs-validation" name="paymentform"  id = "paymentform" action = "/checkout" method="POST" >
             <h4 class="mb-3">Payment</h4>
             <div class="row">
               <div class="col-md-5 mb-3">
@@ -76,15 +76,15 @@
             </div>
             <div class="d-block my-3">
               <div class="custom-control custom-radio">
-                <input id="card" name="paymentMethod" value="card" type="radio" class="custom-control-input" checked required>
+                <input id="card" name="paymentMethod" value="card" type="radio" class="custom-control-input" checked onclick="setideal()" required>
                 <label class="custom-control-label" for="card">Card</label>
               </div>
               <div class="custom-control custom-radio">
-                <input id="alipay" name="paymentMethod" value = "alipay" type="radio" class="custom-control-input" required>
-                <label class="custom-control-label" for="alipay">Alipay</label>
+                <input id="googlepay" name="paymentMethod" value = "googlepay" type="radio" class="custom-control-input" onclick="setideal()" required>
+                <label class="custom-control-label" for="googlepay">Google Pay</label>
               </div>
               <div class="custom-control custom-radio">
-                <input id="ideal" name="paymentMethod" value = "ideal" type="radio" class="custom-control-input" required>
+                <input id="ideal" name="paymentMethod" value = "ideal" type="radio" class="custom-control-input" onclick="setideal()" required>
                 <label class="custom-control-label" for="ideal">iDEAL (for Netherlands)</label>
               </div>
             </div>
@@ -120,6 +120,10 @@
                   Security code required
                 </div>
               </div>
+              <div class="col-md-3 mb-3" >
+                <label></label>
+                <div id="container"></div>
+              </div>
             </div>
             <hr class="mb-4">
             <button class="btn btn-primary btn-lg btn-block" type="submit">Checkout</button>
@@ -137,7 +141,11 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"></script>
     <script src="javascripts/holder.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
-
+    <script
+      async
+      src="https://pay.google.com/gp/p/js/pay.js"
+      onload="onGooglePayLoaded()">
+    </script>
     <script>
       // Example starter JavaScript for disabling form submissions if there are invalid fields
       (function() {
@@ -156,17 +164,13 @@
       })();
     </script>
     <script>
-      function validateForm() {
-        let x = document.forms["paymentform"]["cardExpDt"].value;
-        const re = /^(0[1-9]|1[0-2])\/?([0-9]{4}|[0-9]{2})$/;
-        if (!re.test(x)){
-          alert("Expiration Date must be in MM/YY or MMYY format!");
-          return false;
-        }
-      }
       function setccy() {
         let x = document.forms["paymentform"]["country"].value;
-        if(x == 'HK'){
+        let y = document.forms["paymentform"]["paymentMethod"].value;
+        if(x == 'HK' && y == 'ideal'){
+          alert('iDEAL is for Netherlands only!');
+          document.forms["paymentform"]["country"].value = 'NL';
+        }else if(x == 'HK' ){
           document.getElementById('price1').innerText = '$68';
           document.getElementById('price2').innerText = '$48';
           document.getElementById('price3').innerText = '$38';
@@ -180,11 +184,104 @@
           document.getElementById('price5').innerText = '€18';
         }
       }
+      function setideal() {
+        let x = document.forms["paymentform"]["paymentMethod"].value;
+        if(x == 'ideal'){
+          document.forms["paymentform"]["country"].value = 'NL';
+          document.getElementById('price1').innerText = '€8';
+          document.getElementById('price2').innerText = '€5.5';
+          document.getElementById('price3').innerText = '€4.5';
+          document.getElementById('price4').innerText = 'Total (EUR)';
+          document.getElementById('price5').innerText = '€18';
+          document.forms["paymentform"]["cardName"].required = false;
+          document.forms["paymentform"]["cardNumber"].required = false;
+          document.forms["paymentform"]["cardExpDt"].required = false;
+          document.forms["paymentform"]["cardCVV"].required = false;
+        }else if(x == 'card'){
+          document.forms["paymentform"]["cardName"].required = true;
+          document.forms["paymentform"]["cardNumber"].required = true;
+          document.forms["paymentform"]["cardExpDt"].required = true;
+          document.forms["paymentform"]["cardCVV"].required = true;
+        }
+      }
+      function onGooglePayLoaded(){
+        const baseRequest = {
+          apiVersion: 2,
+          apiVersionMinor: 0
+        };
+        const tokenizationSpecification = {
+          type: 'PAYMENT_GATEWAY',
+          parameters: {
+            'gateway': 'checkoutltd',
+            'gatewayMerchantId': 'pk_sbox_kms5vhdb66lgxsgzlgv4dgy3ziy'
+          }
+        };
+        const allowedCardNetworks = ["AMEX", "DISCOVER", "INTERAC", "JCB", "MASTERCARD", "VISA"];
+        const allowedCardAuthMethods = ["PAN_ONLY", "CRYPTOGRAM_3DS"];
+        const baseCardPaymentMethod = {
+          "type": "CARD",
+            "parameters": {
+              "allowedAuthMethods": allowedCardAuthMethods,
+              "allowedCardNetworks": allowedCardNetworks
+            }
+        };
+        const cardPaymentMethod = Object.assign(
+          {tokenizationSpecification: tokenizationSpecification},
+          baseCardPaymentMethod
+        );
+
+        const paymentsClient = new google.payments.api.PaymentsClient({environment:'TEST'});
+        const isReadyToPayRequest = Object.assign({}, baseRequest);
+        isReadyToPayRequest.allowedPaymentMethods = [baseCardPaymentMethod];
+        paymentsClient.isReadyToPay(isReadyToPayRequest)
+          .then(function(response) {
+            if (response.result) {
+              const button = paymentsClient.createButton({onClick: () => {
+                const paymentDataRequest = Object.assign({}, baseRequest);
+                paymentDataRequest.allowedPaymentMethods = [cardPaymentMethod];
+                let x = document.forms["paymentform"]["country"].value;
+                paymentDataRequest.transactionInfo = {
+                  totalPriceStatus: 'FINAL',
+                  totalPrice: x=='HK'?'154.00':'18.00',
+                  currencyCode: x=='HK'?'HKD':'EUR',
+                  countryCode: x=='HK'?'HK':'NL'
+                };
+                paymentDataRequest.merchantInfo = {
+                  merchantName: 'East West Bank',
+                  merchantId: 'checkoutltd123'
+                };
+                paymentsClient.loadPaymentData(paymentDataRequest).then(function(paymentData){
+                  alert('1');
+                  // if using gateway tokenization, pass this token without modification
+                  paymentToken = paymentData.paymentMethodData.tokenizationData.token;
+                  alert(paymentToken);
+                }).catch(function(err){
+                  alert('2');
+                  // show error in developer console for debugging
+                  console.error(err);
+                });
+              }, allowedPaymentMethods: [baseCardPaymentMethod]}); // make sure to provide an allowed payment method
+              document.getElementById('container').appendChild(button);
+            }
+          })
+          .catch(function(err) {
+            // show error in developer console for debugging
+            console.error(err);
+          });
+      }
+      
     </script>
     <script type="text/javascript">
       var frm = $('#paymentform');
       frm.submit(function (e) {
         e.preventDefault();
+        let x = document.forms["paymentform"]["cardExpDt"].value;
+        let y = document.forms["paymentform"]["paymentMethod"].value;
+        const re = /^(0[1-9]|1[0-2])\/?([0-9]{2})$/;
+        if (y == 'card' && !re.test(x)){
+          alert("Expiration Date must be in MM/YY or MMYY format!");
+          return false;
+        }
           $.ajax({
               type: frm.attr('method'),
               url: frm.attr('action'),
