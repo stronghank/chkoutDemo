@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+var payrequest = require('../services/payservice');
 /* GET home page. */
 router.get('/', function(req, res, next) {
   res.render('index', { title: 'Checkout' });
@@ -13,9 +14,7 @@ router.get('/checkout', function(req, res, next) {
 //checkout post api
 router.post('/checkout', function(req, res, next) {
   console.log("Start calling checkout API here");
-  console.log(req.body);
-
-  res.render('checkout', { title: 'Checkout Page' })
+  payrequest(req,res);
 });
 
 module.exports = router;

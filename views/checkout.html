@@ -36,23 +36,23 @@
               <div>
                 <h6 class="my-0">Minecraft iPhone 14 Case</h6>
               </div>
-              <span class="text-muted">$68</span>
+              <span class="text-muted" id = "price1">$68</span>
             </li>
             <li class="list-group-item d-flex justify-content-between lh-condensed">
               <div>
                 <h6 class="my-0">Elsa iPhone 15 pro Case</h6>
               </div>
-              <span class="text-muted">$48</span>
+              <span class="text-muted" id = "price2">$48</span>
             </li>
             <li class="list-group-item d-flex justify-content-between lh-condensed">
               <div>
                 <h6 class="my-0">Milky Cat iPhone 14 Case</h6>
               </div>
-              <span class="text-muted">$38</span>
+              <span class="text-muted" id = "price3">$38</span>
             </li>
             <li class="list-group-item d-flex justify-content-between">
-              <span>Total (HKD)</span>
-              <strong>$154</strong>
+              <span id = "price4">Total (HKD)</span>
+              <strong id = "price5">$154</strong>
             </li>
           </ul> 
         </div>
@@ -60,12 +60,12 @@
         <div class="col-md-8 order-md-1">    
           
           
-          <form class="needs-validation" novalidate action = "/checkout" method="post">
+          <form class="needs-validation" name="paymentform"  id = "paymentform" action = "/checkout" method="POST" onsubmit="return validateForm()">
             <h4 class="mb-3">Payment</h4>
             <div class="row">
               <div class="col-md-5 mb-3">
                 <label for="country">Country</label>
-                <select class="custom-select d-block w-100" id="country" name="country" required>
+                <select class="custom-select d-block w-100" id="country" name="country" onchange="setccy()" required>
                   <option value="HK">Hong Kong</option>
                   <option value="NL">Netherlands</option>
                 </select>
@@ -107,7 +107,7 @@
             </div>
             <div class="row">
               <div class="col-md-3 mb-3">
-                <label for="cc-expiration">Expiration</label>
+                <label for="cc-expiration">Expiration Date</label>
                 <input type="text" class="form-control" id="cc-expiration" name="cardExpDt" placeholder="" required>
                 <div class="invalid-feedback">
                   Expiration date required
@@ -136,6 +136,8 @@
     <script src="javascripts/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"></script>
     <script src="javascripts/holder.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+
     <script>
       // Example starter JavaScript for disabling form submissions if there are invalid fields
       (function() {
@@ -144,19 +146,57 @@
         window.addEventListener('load', function() {
           // Fetch all the forms we want to apply custom Bootstrap validation styles to
           var forms = document.getElementsByClassName('needs-validation');
-
           // Loop over them and prevent submission
           var validation = Array.prototype.filter.call(forms, function(form) {
             form.addEventListener('submit', function(event) {
-              if (form.checkValidity() === false) {
-                event.preventDefault();
-                event.stopPropagation();
-              }
               form.classList.add('was-validated');
             }, false);
           });
         }, false);
       })();
+    </script>
+    <script>
+      function validateForm() {
+        let x = document.forms["paymentform"]["cardExpDt"].value;
+        const re = /^(0[1-9]|1[0-2])\/?([0-9]{4}|[0-9]{2})$/;
+        if (!re.test(x)){
+          alert("Expiration Date must be in MM/YY or MMYY format!");
+          return false;
+        }
+      }
+      function setccy() {
+        let x = document.forms["paymentform"]["country"].value;
+        if(x == 'HK'){
+          document.getElementById('price1').innerText = '$68';
+          document.getElementById('price2').innerText = '$48';
+          document.getElementById('price3').innerText = '$38';
+          document.getElementById('price4').innerText = 'Total (HKD)';
+          document.getElementById('price5').innerText = '$154';
+        }else if(x == 'NL'){
+          document.getElementById('price1').innerText = '€8';
+          document.getElementById('price2').innerText = '€5.5';
+          document.getElementById('price3').innerText = '€4.5';
+          document.getElementById('price4').innerText = 'Total (EUR)';
+          document.getElementById('price5').innerText = '€18';
+        }
+      }
+    </script>
+    <script type="text/javascript">
+      var frm = $('#paymentform');
+      frm.submit(function (e) {
+        e.preventDefault();
+          $.ajax({
+              type: frm.attr('method'),
+              url: frm.attr('action'),
+              data: frm.serialize(),
+              success: function (data) {
+                  alert('Payment Submitted with status ' + data.status + '!');
+              },
+              error: function (data) {
+                  alert(JSON.stringify(data.responseJSON.error_type + ' :' + data.responseJSON.error_codes));
+              },
+          });
+      });
     </script>
   </body>
 </html>
