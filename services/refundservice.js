@@ -27,7 +27,13 @@ const refundservice = async (req, res) => {
             if(error.response){
                 console.log("Error! " + error.response.status);
                 console.log(JSON.stringify(error.response.data));
-                res.status(422).json(error.response.data);
+                if(error.response.status == 422){
+                    res.status(422).json(error.response.data);
+                }else if(error.response.status == 403){
+                    res.status(403).json({'error_type':'403','error_codes':'Refund not allowed!'});
+                }else{
+                    res.status(502).json({'error_type':'502','error_codes':'Bad gateway!'});
+                }   
             }
         });
 }

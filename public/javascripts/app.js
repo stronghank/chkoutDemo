@@ -34,8 +34,8 @@ function initPayment(){
                 "email": customerEmail
             },
             "processing_channel_id":"pc_5725joyl266ufmcluzvqtn2rc4",
-            "success_url": "http://localhost:3000/",
-            "failure_url": "http://localhost:3000/"
+            "success_url": "http://localhost:3000/payments/success",
+            "failure_url": "http://localhost:3000/payments/failure"
         })
     }); // Order
     const paymentSession = await response.json();

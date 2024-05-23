@@ -8,8 +8,8 @@ let paysessionmessage = {
       }
     },
     "customer": {
-      "name": "Jia Tsang",
-      "email": "jia.tsang@example.com"
+      "name": "sample",
+      "email": "sample"
     },
     "3ds": {
         "enabled": true,

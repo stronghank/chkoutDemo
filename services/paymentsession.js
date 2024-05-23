@@ -6,6 +6,8 @@ const paymentsession = async (req, res) => {
     payData = paysessionmessage
     payData.amount = req.body.amount;
     payData.currency = req.body.currency;
+    payData.customer.name = req.body.customer.name;
+    payData.customer.email = req.body.customer.email;
     let config = {
         method: 'post',
         maxBodyLength: Infinity,
