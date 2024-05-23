@@ -3,7 +3,7 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-
+require('console-stamp')(console, '[HH:MM:ss.l]');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 

@@ -251,12 +251,24 @@
                   merchantId: 'checkoutltd123'
                 };
                 paymentsClient.loadPaymentData(paymentDataRequest).then(function(paymentData){
-                  alert('1');
                   // if using gateway tokenization, pass this token without modification
                   paymentToken = paymentData.paymentMethodData.tokenizationData.token;
-                  alert(paymentToken);
+                  $.ajax({
+                    type: 'post',
+                    url: '/checkout',
+                    data: {
+                      'paymentMethod':'googlepay',
+                      'paymentToken': paymentToken,
+                      'country':x
+                    },
+                    success: function (data) {
+                      alert('Payment Submitted with status ' + data.status + '!');
+                    },
+                    error: function (data) {
+                      alert(JSON.stringify(data.responseJSON.error_type + ' :' + data.responseJSON.error_codes));
+                    },
+                  });
                 }).catch(function(err){
-                  alert('2');
                   // show error in developer console for debugging
                   console.error(err);
                 });
