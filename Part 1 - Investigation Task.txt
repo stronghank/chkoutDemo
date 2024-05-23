@@ -1,0 +1,20 @@
+1. Request Token:
+	The cvv length is wrong, the API reference for Tokens mentions that "The card verification value/code. 3 digits, except for American Express (4 digits)".
+	So we can change the cvv from "1000" to a 3-digit number to make it work and get the token returned, or we can change the card number to an American Express card which uses 4 digits cvv to make the API work.
+
+2. Payment request - token:
+	The token is already used so it is invalid.
+	Replace the token field with the one we generated from the previous 1. Request Token (https://api.sandbox.checkout.com/tokens) can make the API succeed with the status Authorized. 
+
+3. Payment request - card:
+	The length of the processing_channel_id is wrong, based on the regular expression ^(pc)_(\w{26})$ from API reference, it should be 26 characters after "pc_" instead of 28. 
+	Delete the last 2 characters from processing_channel_id can make the API succeed with the status Authorized.
+
+4. Refund request:
+	The API failed due to 403 "Refund not allowed". I called the GET request https://api.sandbox.checkout.com/payments/pay_6nsdm4ovfzyedlgj2zji6l2aou and found the status was already in "Refunded".
+	Change the payment_id to the one returned in 3. Payment request - card can make the API succeed with 202 Accepted and a returned action_id
+
+5. Capture request:
+	The API failed due to 403 "Capture not allowed". I called the GET request https://api.sandbox.checkout.com/payments/pay_von5dadyonvezn6uyx47v7jdoi and found the status was already in "Captured".
+	In 3. Payment request - card, we can change the field capture from true to false, make the request to get a new payment_id. Then we use this payment_id to call the capture request again and can get 202 Accepted.  
+	
